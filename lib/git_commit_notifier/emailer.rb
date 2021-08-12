@@ -1,6 +1,8 @@
 # -*- coding: utf-8; mode: ruby; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- vim:fenc=utf-8:filetype=ruby:et:sw=2:ts=2:sts=2
 
 require 'premailer'
+require 'json'
+
 
 # Represents email sender.
 class GitCommitNotifier::Emailer
@@ -165,6 +167,29 @@ class GitCommitNotifier::Emailer
     nil
   end
 
+  def perform_delivery_postmark(text_content:, html_content:, options:)
+    uri = URI('https://api.postmarkapp.com/email')
+    https = Net::HTTP.new(uri.host,uri.port)
+    https.use_ssl = true
+    req = Net::HTTP::Post.new(uri.path, initheader = {
+      "Accept" => "application/json",
+      "Content-Type" => "application/json",
+      "X-Postmark-Server-Token" => options[:api_key]
+    })
+
+    req.body = {
+      "From" => options[:from],
+      "To" => options[:to],
+      "Subject" => options[:subject],
+      "TextBody" => text_content,
+      "HtmlBody" => html_content,
+      "MessageStream" => "outbound"
+    }.to_json
+
+    res = https.request(req)
+    puts "Response #{res.code} #{res.message}: #{res.body}"
+  end
+
   # Performs email delivery through Sendmail.
   # @return [NilClass] nil
   def perform_delivery_sendmail(content, options = nil)
@@ -262,6 +287,19 @@ class GitCommitNotifier::Emailer
     case config['delivery_method'].to_sym
     when :smtp then perform_delivery_smtp(content, config['smtp_server'])
     when :nntp then perform_delivery_nntp(content, config['nntp_settings'])
+    when :postmark
+      postmark_settings = {
+        from: from,
+        to: @recipient,
+        subject: @subject,
+        api_key: ENV['POSTMARK_API_KEY']
+      }
+
+      perform_delivery_postmark(
+        text_content: plaintext,
+        html_content: mail_html_message,
+        options: postmark_settings
+      )
     when :debug then perform_delivery_debug(content)
     else # sendmail
       perform_delivery_sendmail(content, config['sendmail_options'])
