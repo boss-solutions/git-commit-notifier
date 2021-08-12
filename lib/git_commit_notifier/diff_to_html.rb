@@ -641,22 +641,23 @@ module GitCommitNotifier
       end
 
       commit_link = markup_commit_for_html(commit_info[:commit])
-      title = "<dl class=\"title\">"
-      title += "<dt>Commit</dt><dd>#{commit_link}</dd>\n"
-      title += "<dt>Branch</dt><dd>#{CGI.escapeHTML(branch_name)}</dd>\n" if branch_name
+      # title = "<dl class=\"title\">"
+      # title += "<dt>Commit</dt><dd>#{commit_link}</dd>\n"
+      # title += "<dt>Branch</dt><dd>#{CGI.escapeHTML(branch_name)}</dd>\n" if branch_name
 
-      title += "<dt>Author</dt><dd>#{CGI.escapeHTML(commit_info[:author])} &lt;#{commit_info[:email]}&gt;</dd>\n"
+      # title += "<dt>Author</dt><dd>#{CGI.escapeHTML(commit_info[:author])} &lt;#{commit_info[:email]}&gt;</dd>\n"
 
-      # Show separate committer name/email only if it differs from author
-      if commit_info[:author] != commit_info[:committer] || commit_info[:email] != commit_info[:commit_email]
-        title += "<dt>Committer</dt><dd>#{CGI.escapeHTML(commit_info[:committer])} &lt;#{commit_info[:commit_email]}&gt;</dd>\n"
-      end
+      # # Show separate committer name/email only if it differs from author
+      # if commit_info[:author] != commit_info[:committer] || commit_info[:email] != commit_info[:commit_email]
+      #   title += "<dt>Committer</dt><dd>#{CGI.escapeHTML(commit_info[:committer])} &lt;#{commit_info[:commit_email]}&gt;</dd>\n"
+      # end
 
-      title += "<dt>Date</dt><dd>#{CGI.escapeHTML commit_info[:date]}</dd>\n"
+      # title += "<dt>Date</dt><dd>#{CGI.escapeHTML commit_info[:date]}</dd>\n"
 
-      multi_line_message = commit_info[:message].count > 1
-      title += "<dt>Message</dt><dd class='#{multi_line_message ? "multi-line" : ""}'>#{message_array_as_html(commit_info[:message])}</dd>\n"
-      title += "</dl>"
+      # multi_line_message = commit_info[:message].count > 1
+      # title += "<dt>Message</dt><dd class='#{multi_line_message ? "multi-line" : ""}'>#{message_array_as_html(commit_info[:message])}</dd>\n"
+      # title += "</dl>"
+      title = ""
 
       @file_changes = []
       text = ""
