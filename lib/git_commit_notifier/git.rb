@@ -45,6 +45,15 @@ class GitCommitNotifier::Git
       from_shell("git show #{rev.strip}#{gitopt}")
     end
 
+    def diff(rev, opts = {})
+      gitopt = " --date=rfc2822"
+      gitopt += " --pretty=fuller"
+      gitopt += " -M#{GitCommitNotifier::CommitHook.config['similarity_detection_threshold'] || "0.5"}"
+      gitopt += " -w" if opts[:ignore_whitespace] == 'all'
+      gitopt += " -b" if opts[:ignore_whitespace] == 'change'
+      from_shell("git diff #{rev.strip}#{gitopt}")
+    end
+
     # Runs `git describe'
     # @return [String] Its output
     # @see from_shell

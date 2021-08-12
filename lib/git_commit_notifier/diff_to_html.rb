@@ -606,9 +606,15 @@ module GitCommitNotifier
       m && m[1]
     end
 
-    def diff_for_commit(commit)
+    def diff_for_commit(commit, use_git_diff = false)
       @current_commit = commit
-      raw_diff = truncate_long_lines(Git.show(commit, :ignore_whitespace => ignore_whitespace))
+
+      raw_diff = if use_git_diff
+        truncate_long_lines(Git.diff(commit, :ignore_whitespace => ignore_whitespace))
+      else
+        truncate_long_lines(Git.show(commit, :ignore_whitespace => ignore_whitespace))
+      end
+
       raise "git show output is empty" if raw_diff.empty?
 
       if raw_diff.respond_to?(:encode!)
@@ -798,34 +804,7 @@ module GitCommitNotifier
     end
 
     def diff_for_branch(branch, rev, change_type)
-      commits = case change_type
-      when :delete
-        puts "ignoring branch delete"
-        []
-      when :create, :update
-        # Note that "unique_commits_per_branch" really means "consider commits
-        # on this branch without regard to whether they occur on other branches"
-        # The flag unique_to_current_branch passed to new_commits means the
-        # opposite: "consider only commits that are unique to this branch"
-
-       	# Note :: In case of creation of a new branch, the oldrev passed by git
-       	# to the post-receive hook is 00000... which causes the git commit notifier
-       	# to send out notifications for ALL commits in the repository. Hence we force
-       	# the "unique_commits_per_branch" config to "true" in such cases, and in other
-       	# cases, we consider the value from the config file
-        if oldrev =~ /^0+$/
-          Git.new_commits(oldrev, newrev, ref_name, true)
-        else
-          Git.new_commits(oldrev, newrev, ref_name, !unique_commits_per_branch?)
-        end
-      end
-
-      # Add each diff to @result
-      commits.each do |commit|
-          commit_result = diff_for_commit(commit)
-          next  if commit_result.nil?
-          @result << commit_result
-      end
+      @result << diff_for_commit(rev, true)
     end
 
     def clear_result
@@ -870,7 +849,7 @@ module GitCommitNotifier
         diff_for_annotated_tag($1, @rev, change_type)
       when %r!^refs/heads/(.+),commit$!
         # Change on a branch
-        diff_for_branch($1, @rev, change_type)
+        diff_for_branch($1, @oldrev, change_type)
       when %r!^refs/remotes/(.+),commit$!
         # Remote branch
         puts "Ignoring #{change_type} on remote branch #{$1}"
