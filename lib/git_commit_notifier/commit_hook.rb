@@ -104,7 +104,7 @@ module GitCommitNotifier
       # @param [String] ref_name Git reference (usually in "refs/heads/branch" format).
       # @return [NilClass] nil
       # @see config
-      def run(config_name, rev1, rev2, ref_name)
+      def run(config_name, rev1, rev2, ref_name, html_content_header)
 
         if @start_time.nil?
           @start_time = Time.new
@@ -209,6 +209,9 @@ module GitCommitNotifier
             text << result[:text_content]
             html << result[:html_content]
           end
+
+          html_content_header = html_content_header.split("\n").map { |line| line + '<br>' }.join('')
+          html.unshift(html_content_header)
 
           # Form the subject from template
           revised_subject_words = subject_words.merge({

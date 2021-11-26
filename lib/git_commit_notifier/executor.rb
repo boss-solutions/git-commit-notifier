@@ -22,12 +22,10 @@ module GitCommitNotifier
           return
         end
 
-        # Note that there may be multiple lines on stdin, such
-        # as in the case of multiple tags being pushed
-        $stdin.each_line do |line|
-          oldrev, newrev, ref = line.strip.split
-          GitCommitNotifier::CommitHook.run args.first, oldrev, newrev, ref
-        end
+        input = $stdin.read
+        oldrev, newrev, ref = input.strip.split
+        html_content_header = input[(input.index("'") + 1)...-2]
+        GitCommitNotifier::CommitHook.run args.first, oldrev, newrev, ref, html_content_header
 
       when 2
         GitCommitNotifier::CommitHook.run args.first, args.last, args.last, ""
