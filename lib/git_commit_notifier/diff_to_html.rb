@@ -615,8 +615,6 @@ module GitCommitNotifier
         truncate_long_lines(Git.show(commit, :ignore_whitespace => ignore_whitespace))
       end
 
-      raise "git show output is empty" if raw_diff.empty?
-
       if raw_diff.respond_to?(:encode!)
         unless raw_diff.valid_encoding?
           raw_diff.encode!("UTF-16", "UTF-8", :invalid => :replace, :undef => :replace)
@@ -663,6 +661,11 @@ module GitCommitNotifier
       text = ""
 
       html_diff = diff_for_revision(extract_diff_from_git_show_output(raw_diff))
+
+      if html_diff.empty?
+        html_diff = '[Empty diff]'
+      end
+
       message_array = message_array_as_html(changed_files.split("\n"))
 
       if show_summary?
